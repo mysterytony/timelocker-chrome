@@ -5,7 +5,8 @@
   "permissions": [
     "activeTab",
     "declarativeContent",
-    "storage"
+    "storage",
+    "https://www.google.com/*"
   ],
   "options_page": "options.html",
   "background": {
