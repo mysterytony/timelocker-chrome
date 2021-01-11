@@ -5,15 +5,29 @@
   "permissions": [
     "activeTab",
     "declarativeContent",
-    "storage"
+    "storage",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
   ],
   "options_page": "options.html",
   "background": {
     "scripts": [
       "background.js"
     ],
-    "persistent": false
+    "persistent": true
   },
+  "content_scripts": [
+    {
+      "js": [
+        "./overlay/content.js"
+      ],
+      "matches": [
+        "*://*/*"
+      ]
+    }
+  ],
   "page_action": {
     "default_popup": "popup.html",
     "default_icon": {
