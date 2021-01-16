@@ -1,0 +1,1 @@
+to start, in chrome://extensions, open developer mode, then "Load unpacked".
