@@ -2,15 +2,6 @@
 
 chrome.runtime.onInstalled.addListener(function () {});
 
-// chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
-//   chrome.declarativeContent.onPageChanged.addRules([{
-//     conditions: [new chrome.declarativeContent.PageStateMatcher({
-//       pageUrl: { hostContains: '.google.com' },
-//     })],
-//     actions: [new chrome.declarativeContent.ShowPageAction()]
-//   }])
-// })
-
 chrome.storage.sync.get("color", (items) => {
   console.log("colors:", items);
   if (items.length == 0) {
@@ -39,11 +30,14 @@ chrome.storage.sync.get("blocked_hostnames", (host_suffixes) => {
   // read into blocked_hostnames
   blocked_hostnames = host_suffixes.blocked_hostnames || [];
 
-  // TODO: remove bilibili, meant for temp test
-  chrome.storage.sync.set({ blocked_hostnames: ["bilibili.com"] }, () => {
-    console.log("set to bilibili");
-    blocked_hostnames[0] = "bilibili.com";
-  });
+  chrome.storage.sync.set(
+    { blocked_hostnames: ["bilibili.com", "youtube.com"] },
+    () => {
+      console.log("set to bilibili and youtube");
+      blocked_hostnames[0] = "bilibili.com";
+      blocked_hostnames[1] = "youtube.com";
+    }
+  );
 });
 
 function is_hostname_blocked(url, tabId) {
@@ -76,6 +70,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
     if (is_hostname_blocked(tab.url, tab.id)) {
       console.log(tabId, changeInfo, tab, "sending overlay html");
+      // here passing the overlay html, don't think it's the best practice
       fetch(chrome.runtime.getURL("overlay/overlay.html"))
         .then((response) => response.text())
         .then((data) => chrome.tabs.sendMessage(tab.id, data));
@@ -105,26 +100,36 @@ chrome.webRequest.onBeforeRequest.addListener(
 );
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message == "dismiss") {
-    console.log(message, sender);
-    chrome.tabs.reload(sender.tab.id);
-    tabs_in_countdown[sender.tab.id] = 10; // 10 seconds
-    sendResponse("you are dismissed");
-  } else if (message == "refresh block url") {
+  if (message == "refresh block url") {
+    // came from save action on options page
     chrome.storage.sync.get("blocked_hostnames", (host_suffixes) => {
       console.log("time locked urls", host_suffixes);
       // read into blocked_hostnames
       blocked_hostnames = host_suffixes.blocked_hostnames || [];
     });
+  } else if (message == "close") {
+    // came from close action on overlay page
+    chrome.tabs.remove(sender.tab.id);
+  } else {
+    // came from the overlay page, either 5, 15, or 30 minutes
+    console.log(message, sender);
+    chrome.tabs.reload(sender.tab.id);
+    if (message == "5") {
+      tabs_in_countdown[sender.tab.id] = 5 * 60; // 5 minutes
+    } else if (message == "15") {
+      tabs_in_countdown[sender.tab.id] = 15 * 60; // 15 minutes
+    } else if (message == "30") {
+      tabs_in_countdown[sender.tab.id] = 30 * 60; // 30 minutes
+    }
   }
 });
 
-const LOOP_SEC = 5;
+const LOOP_SEC = 1;
 const LOOP_MSEC = LOOP_SEC * 1000;
 setInterval(() => {
-  if (Object.keys(tabs_in_countdown).length > 0) {
-    console.log("tabs_in_countdown", tabs_in_countdown);
-  }
+  // if (Object.keys(tabs_in_countdown).length > 0) {
+  //   console.log("tabs_in_countdown", tabs_in_countdown);
+  // }
 
   for (var tabId in tabs_in_countdown) {
     tabs_in_countdown[tabId] -= LOOP_SEC;
@@ -146,12 +151,7 @@ setInterval(() => {
         }
 
         // the tab has expired the time, show overlay again to block content
-        // TODO: block xhr again?
         console.log(tab.id, "sending overlay html");
-        // here we need to await because if the second then() is executed after the function and we
-        // need to send multiple messages, the tabId gets carried in to the different sendMessage
-        // can be the same, and causes miss sending
-        // no js concurrent expert here :( so no elegant solution
         fetch(chrome.runtime.getURL("overlay/overlay.html"))
           .then((response) => response.text())
           .then((data) =>

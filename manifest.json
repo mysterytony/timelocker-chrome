@@ -3,16 +3,13 @@
   "version": "0.1",
   "description": "lock your time",
   "permissions": [
-    "activeTab",
-    "declarativeContent",
     "storage",
     "tabs",
     "webRequest",
     "webRequestBlocking",
-    "alarms",
     "<all_urls>"
   ],
-  "options_page": "options.html",
+  "options_page": "options/options.html",
   "background": {
     "scripts": [
       "background.js"

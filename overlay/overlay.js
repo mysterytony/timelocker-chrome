@@ -1,36 +1,36 @@
 "use strict";
 
-// setTimeout(() => {
-
-//   var images = document.getElementsByTagName('img');
-//   for (var i = 0, l = images.length; i < l; i++) {
-//     images[i].src = 'http://placekitten.com/' + images[i].width + '/' + images[i].height;
-//   }
-// }, 1000)
-
 chrome.runtime.onMessage.addListener((html, sender, sendResponse) => {
-  console.log(html);
   document
     .getElementsByTagName("body")[0]
     .insertAdjacentHTML("beforeend", html);
   document
-    .querySelector("button.timelocker-chrome-dismiss")
-    .addEventListener("click", (event) => {
-      // disable the dismiss button, because reload takes some time, don't want user to link dismiss multiple times
-      event.target.disabled = true;
-
-      chrome.runtime.sendMessage(null, "dismiss", {}, (response) => {
-        console.log(response);
-        // document.querySelector("div.timelocker-chrome-overlay").remove()
-      });
+    .querySelector(".timelocker-chrome-overlay-wrapper button")
+    .addEventListener("click", () => {
+      // disable all the button, because reload takes some time,
+      // don't want user to click buttons multiple times
+      document
+        .querySelectorAll(".timelocker-chrome-overlay-wrapper button")
+        .forEach((b) => (b.disabled = true));
     });
-  sendResponse("msg received");
+  document
+    .querySelector("button.timelocker-chrome-dismiss-5-minutes")
+    .addEventListener("click", () => {
+      chrome.runtime.sendMessage(null, "5");
+    });
+  document
+    .querySelector("button.timelocker-chrome-dismiss-15-minutes")
+    .addEventListener("click", () => {
+      chrome.runtime.sendMessage(null, "15");
+    });
+  document
+    .querySelector("button.timelocker-chrome-dismiss-30-minutes")
+    .addEventListener("click", () => {
+      chrome.runtime.sendMessage(null, "30");
+    });
+  document
+    .querySelector("button.timelocker-chrome-close")
+    .addEventListener("click", () => {
+      chrome.runtime.sendMessage(null, "close");
+    });
 });
-
-// $(chrome.runtime.getURL('overlay.html'), function (html) {
-//   document.getElementsByTagName("body")[0].insertAdjacentHTML("beforeend", html)
-// });
-
-// function btn_dismiss_onclick() {
-//   console.log("dismiss")
-// }

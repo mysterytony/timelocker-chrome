@@ -1,17 +1,54 @@
 <style>
+  .timelocker-chrome-overlay-wrapper {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    /* int max */
+    z-index: 2147483647 !important;
+    font-size: 1.5em;
+  }
+  .timelocker-chrome-overlay-background {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    filter: blur(4px);
+    opacity: 0.8;
+    background-color: lightgrey;
+  }
   .timelocker-chrome-overlay {
     position: fixed;
     height: 80%;
     width: 80%;
     top: 10%;
     left: 10%;
-    padding: 10px;
-    /* int max */
-    z-index: 2147483647 !important;
-    background-color: aqua;
+    padding: 1em;
+    background-color: white;
+    backdrop-filter: blur(10px);
+    text-align: center;
+    line-height: 200%;
+  }
+
+  .timelocker-chrome-overlay-wrapper button {
+    line-height: normal;
   }
 </style>
-<div class="timelocker-chrome-overlay">
-  Hello World
-  <button class="timelocker-chrome-dismiss">Dismiss</button>
+<div class="timelocker-chrome-overlay-wrapper">
+  <div class="timelocker-chrome-overlay-background"></div>
+  <div class="timelocker-chrome-overlay">
+    Why did you open this webpage? <br />
+    How long do you need? <br />
+    What else can you do? <br />
+    你为什么打开这个网页？<br />
+    你要看多长时间？<br />
+    你还能去做什么？<br />
+    <br />
+    Pick a time to continue:
+    <button class="timelocker-chrome-dismiss-5-minutes">5 Minutes</button>
+    <button class="timelocker-chrome-dismiss-15-minutes">15 Minutes</button>
+    <button class="timelocker-chrome-dismiss-30-minutes">30 Minutes</button><br>
+    Or <button class="timelocker-chrome-close">close</button> instead.
+    <hr> Brought you by timelocker for chrome.
+  </div>
 </div>
