@@ -31,11 +31,12 @@ chrome.storage.sync.get("blocked_hostnames", (host_suffixes) => {
   blocked_hostnames = host_suffixes.blocked_hostnames || [];
 
   chrome.storage.sync.set(
-    { blocked_hostnames: ["bilibili.com", "youtube.com"] },
+    { blocked_hostnames: ["bilibili.com", "youtube.com", "douyu.com"] },
     () => {
       console.log("set to bilibili and youtube");
       blocked_hostnames[0] = "bilibili.com";
       blocked_hostnames[1] = "youtube.com";
+      blocked_hostnames[2] = "douyu.com";
     }
   );
 });
@@ -71,9 +72,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (is_hostname_blocked(tab.url, tab.id)) {
       console.log(tabId, changeInfo, tab, "sending overlay html");
       // here passing the overlay html, don't think it's the best practice
-      fetch(chrome.runtime.getURL("overlay/overlay.html"))
-        .then((response) => response.text())
-        .then((data) => chrome.tabs.sendMessage(tab.id, data));
+
+      chrome.tabs.sendMessage(tab.id, "go");
       return;
     }
   }
@@ -152,13 +152,7 @@ setInterval(() => {
 
         // the tab has expired the time, show overlay again to block content
         console.log(tab.id, "sending overlay html");
-        fetch(chrome.runtime.getURL("overlay/overlay.html"))
-          .then((response) => response.text())
-          .then((data) =>
-            chrome.tabs.sendMessage(tab.id, data, undefined, (response) => {
-              console.log(response);
-            })
-          );
+        chrome.tabs.sendMessage(tab.id, "go");
       });
     } else {
       console.log("tabId", tabId, "has not expired the time yet");
