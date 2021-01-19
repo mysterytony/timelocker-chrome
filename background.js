@@ -29,16 +29,6 @@ chrome.storage.sync.get("blocked_hostnames", (host_suffixes) => {
   console.log("time locked urls", host_suffixes);
   // read into blocked_hostnames
   blocked_hostnames = host_suffixes.blocked_hostnames || [];
-
-  chrome.storage.sync.set(
-    { blocked_hostnames: ["bilibili.com", "youtube.com", "douyu.com"] },
-    () => {
-      console.log("set to bilibili and youtube");
-      blocked_hostnames[0] = "bilibili.com";
-      blocked_hostnames[1] = "youtube.com";
-      blocked_hostnames[2] = "douyu.com";
-    }
-  );
 });
 
 function is_hostname_blocked(url, tabId) {
