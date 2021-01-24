@@ -29,15 +29,6 @@ chrome.storage.sync.get("blocked_hostnames", (host_suffixes) => {
   console.log("time locked urls", host_suffixes);
   // read into blocked_hostnames
   blocked_hostnames = host_suffixes.blocked_hostnames || [];
-
-  chrome.storage.sync.set(
-    { blocked_hostnames: ["bilibili.com", "youtube.com"] },
-    () => {
-      console.log("set to bilibili and youtube");
-      blocked_hostnames[0] = "bilibili.com";
-      blocked_hostnames[1] = "youtube.com";
-    }
-  );
 });
 
 function is_hostname_blocked(url, tabId) {
@@ -59,11 +50,6 @@ function is_hostname_blocked(url, tabId) {
   return false;
 }
 
-chrome.tabs.onCreated.addListener(function (tab) {
-  // console.log(tab.id)
-  // chrome.tabs.sendMessage(tab.id, "hello world");
-});
-
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo && changeInfo.status && changeInfo.status == "complete") {
     // check if this is one of the blocked url
@@ -71,33 +57,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (is_hostname_blocked(tab.url, tab.id)) {
       console.log(tabId, changeInfo, tab, "sending overlay html");
       // here passing the overlay html, don't think it's the best practice
-      fetch(chrome.runtime.getURL("overlay/overlay.html"))
-        .then((response) => response.text())
-        .then((data) => chrome.tabs.sendMessage(tab.id, data));
+
+      chrome.tabs.executeScript(tab.id, {
+        file: "overlay/overlay.js",
+      });
       return;
     }
   }
 });
-
-chrome.webRequest.onBeforeRequest.addListener(
-  // callback, returns webRequest.BlockingResponse
-  (detail) => {
-    // for blocked pages, allows load the main frame only, so chrome doesn't show an error page instead
-    if (
-      detail.type != "main_frame" &&
-      is_hostname_blocked(detail.url, detail.tabId)
-    ) {
-      return { cancel: true };
-    }
-    return { cancel: false };
-  },
-  // webRequest.RequestFilter
-  {
-    urls: ["<all_urls>"],
-  },
-  // extraInfoSpec
-  ["blocking"]
-);
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message == "refresh block url") {
@@ -112,8 +79,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.tabs.remove(sender.tab.id);
   } else {
     // came from the overlay page, either 5, 15, or 30 minutes
-    console.log(message, sender);
-    chrome.tabs.reload(sender.tab.id);
+    chrome.tabs.sendMessage(sender.tab.id, "hide");
     if (message == "5") {
       tabs_in_countdown[sender.tab.id] = 5 * 60; // 5 minutes
     } else if (message == "15") {
@@ -151,14 +117,8 @@ setInterval(() => {
         }
 
         // the tab has expired the time, show overlay again to block content
-        console.log(tab.id, "sending overlay html");
-        fetch(chrome.runtime.getURL("overlay/overlay.html"))
-          .then((response) => response.text())
-          .then((data) =>
-            chrome.tabs.sendMessage(tab.id, data, undefined, (response) => {
-              console.log(response);
-            })
-          );
+        console.log(tab.id, "showing overlay");
+        chrome.tabs.sendMessage(tab.id, "show");
       });
     } else {
       console.log("tabId", tabId, "has not expired the time yet");
