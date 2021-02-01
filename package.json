@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/mysterytony/timelocker-chrome/issues"
   },
-  "homepage": "https://github.com/mysterytony/timelocker-chrome#readme"
+  "homepage": "https://github.com/mysterytony/timelocker-chrome#readme",
+  "devDependencies": {
+    "snowpack": "^3.0.11"
+  }
 }
