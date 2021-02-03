@@ -4,6 +4,7 @@
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "node",
+    "lib": ["DOM", "ESNext"],
     // "jsx": "preserve",
     "allowJs": true,
     "baseUrl": "./",

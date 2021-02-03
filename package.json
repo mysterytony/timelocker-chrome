@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/mysterytony/timelocker-chrome#readme",
   "devDependencies": {
+    "@types/chrome": "0.0.129",
     "snowpack": "^3.0.11"
   },
   "dependencies": {
