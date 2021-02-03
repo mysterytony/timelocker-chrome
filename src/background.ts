@@ -1,16 +1,5 @@
 "use strict";
 
-chrome.runtime.onInstalled.addListener(function () {});
-
-chrome.storage.sync.get("color", (items) => {
-  console.log("colors:", items);
-  if (items.length == 0) {
-    chrome.storage.sync.set({ color: "#3aa757" }, function () {
-      console.log("The color init'ed to green.");
-    });
-  }
-});
-
 /**
  * list of hostnames or suffixes of hostnames (e.g. www.google.com, or youtube.com)
  * used to compare when new tabs are created. It's used to compare the suffixes, that is
