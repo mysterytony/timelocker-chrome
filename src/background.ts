@@ -16,14 +16,14 @@ chrome.storage.sync.get("color", (items) => {
  * used to compare when new tabs are created. It's used to compare the suffixes, that is
  * google.com will block both www.google.com and maps.google.com.
  */
-var blocked_hostnames = [];
+let blocked_hostnames: string[] = [];
 
 /**
  * an object where key is an tab id (integers) and value is count down period in seconds.
  * The tabs urls are in the above blocked_hostnames but are allowed
  * to navigate for a certain period of time.
  */
-var tabs_in_countdown = {};
+let tabs_in_countdown: Record<number, number> = {};
 
 chrome.storage.sync.get("blocked_hostnames", (host_suffixes) => {
   console.log("time locked urls", host_suffixes);
@@ -31,7 +31,7 @@ chrome.storage.sync.get("blocked_hostnames", (host_suffixes) => {
   blocked_hostnames = host_suffixes.blocked_hostnames || [];
 });
 
-function is_hostname_blocked(url, tabId) {
+function is_hostname_blocked(url: string, tabId: number) {
   if (tabs_in_countdown.hasOwnProperty(tabId)) {
     return false;
   }
@@ -54,6 +54,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo && changeInfo.status && changeInfo.status == "complete") {
     // check if this is one of the blocked url
 
+    if (!tab.id || !tab.url) return;
     if (is_hostname_blocked(tab.url, tab.id)) {
       console.log(tabId, changeInfo, tab, "sending overlay html");
       // here passing the overlay html, don't think it's the best practice
@@ -76,8 +77,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   } else if (message == "close") {
     // came from close action on overlay page
-    chrome.tabs.remove(sender.tab.id);
+    if (sender.tab?.id) chrome.tabs.remove(sender.tab.id);
   } else {
+    if (!sender.tab?.id) return;
     // came from the overlay page, either 5, 15, or 30 minutes
     chrome.tabs.sendMessage(sender.tab.id, "hide");
     if (message == "5") {
@@ -93,11 +95,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 const LOOP_SEC = 1;
 const LOOP_MSEC = LOOP_SEC * 1000;
 setInterval(() => {
-  // if (Object.keys(tabs_in_countdown).length > 0) {
-  //   console.log("tabs_in_countdown", tabs_in_countdown);
-  // }
-
-  for (var tabId in tabs_in_countdown) {
+  for (const tabId in tabs_in_countdown) {
     tabs_in_countdown[tabId] -= LOOP_SEC;
     if (tabs_in_countdown[tabId] <= 0) {
       console.log("tabId", tabId, "has expired the time");
@@ -105,6 +103,7 @@ setInterval(() => {
 
       // check if they are still being blocked, because one can change the options
       chrome.tabs.get(Number(tabId), (tab) => {
+        if (!tab.id || !tab.url) return;
         if (!is_hostname_blocked(tab.url, tab.id)) {
           console.log(
             "tabId",
@@ -125,3 +124,4 @@ setInterval(() => {
     }
   }
 }, LOOP_MSEC); // for every 5 seconds
+export {};
