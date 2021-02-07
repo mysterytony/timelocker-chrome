@@ -2,7 +2,13 @@
 
 // hostNode for overlay
 const host = document.createElement("div");
-document.getElementsByTagName("body")[0].appendChild(host);
+
+document.addEventListener("fullscreenchange", () => {
+  const parent = document.fullscreenElement;
+  if (parent && !parent.contains(host)) {
+    parent.insertBefore(host, parent.firstChild);
+  }
+});
 
 const shadowRoot = host.attachShadow({ mode: "open" });
 
@@ -52,6 +58,12 @@ chrome.runtime.onMessage.addListener((command) => {
   if (command === "show") {
     host.setAttribute("style", "display:block;");
     enableAllButton();
+    // attach host to dom if necessary
+    const parent = document.fullscreenElement;
+    if (parent && !parent.contains(host)) {
+      parent.insertBefore(host, parent.firstChild);
+    } else if (host.parentNode === null)
+      document.getElementsByTagName("body")[0].appendChild(host);
   } else if (command === "hide") {
     host.setAttribute("style", "display:none;");
   } else {
