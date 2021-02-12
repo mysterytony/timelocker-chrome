@@ -11,7 +11,14 @@ const shadowRoot = host.attachShadow({ mode: "open" });
 // post: list of nodes(could be strings) to append after the button.
 // text: innerText of the button node.
 // event: message payload to send when the button is clicked.
-const buttonOptions = [
+
+interface ButtonOption {
+  event: string;
+  text: string;
+  pre?: (string | Node)[];
+  post?: (string | Node)[];
+}
+const buttonOptions: ButtonOption[] = [
   { pre: ["Pick a time to continue: "], event: "5", text: "5 Minutes" },
   { event: "15", text: "15 Minutes" },
   { event: "30", text: "30 Minutes" },
@@ -22,19 +29,18 @@ const buttonOptions = [
     post: [" instead."],
   },
 ];
-
 // mapping function to create buttons according to buttonOptions
-const createButton = ({ event, text, pre, post }) => {
+const createButton = ({ event, text, pre, post }: ButtonOption) => {
   const button = document.createElement("button");
 
   button.innerText = text;
   button.addEventListener("click", () => {
-    chrome.runtime.sendMessage(null, event);
+    chrome.runtime.sendMessage(event);
   });
   return { button, pre, post };
 };
 
-const buttonGroup = buttonOptions.map((minute) => createButton(minute));
+const buttonGroup = buttonOptions.map((option) => createButton(option));
 
 // functions to enable/disable all buttons
 const disableAllButton = () =>
@@ -61,7 +67,7 @@ chrome.runtime.onMessage.addListener((command) => {
   shadowRoot.innerHTML = await loadedContent.text();
 
   // inject generated buttons into target node.
-  const buttonGroupRoot = shadowRoot.getElementById("button-group");
+  const buttonGroupRoot = shadowRoot.getElementById("button-group")!;
   buttonGroup.forEach(({ button, pre, post }) => {
     button.addEventListener("click", () => disableAllButton());
     if (pre) buttonGroupRoot.append(...pre);
@@ -69,3 +75,4 @@ chrome.runtime.onMessage.addListener((command) => {
     if (post) buttonGroupRoot.append(...post);
   });
 })();
+export {};
